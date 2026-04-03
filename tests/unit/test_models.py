@@ -17,7 +17,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
-from hypothesis import HealthCheck, given, settings
+from hypothesis import given, settings
 from hypothesis import strategies as st
 from pydantic import ValidationError
 from quantforge.core.models import (
@@ -333,7 +333,7 @@ class TestTrade:
         assert t.pnl == Decimal("0")
         assert t.is_winner is False
 
-    @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+    @settings(max_examples=100)
     @given(
         entry=st.decimals(min_value="1", max_value="5000", places=2, allow_nan=False),
         exit_=st.decimals(min_value="1", max_value="5000", places=2, allow_nan=False),
@@ -346,9 +346,10 @@ class TestTrade:
         qty: Decimal,
     ) -> None:
         """Property: is_winner iff pnl > 0 (with zero costs)."""
+        instrument = Instrument(symbol="TEST")
         t = Trade(
             trade_id="prop",
-            instrument=aapl,
+            instrument=instrument,
             entry_date=date(2024, 1, 1),
             exit_date=date(2024, 1, 2),
             entry_price=entry,

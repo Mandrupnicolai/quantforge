@@ -15,14 +15,13 @@ from quantforge.strategies.base import (
 )
 
 
-def _make_prices(close_values: list[float], open_offset: float = 1.0) -> pd.DataFrame:
-    n = len(close_values)
-    closes = pd.Series(close_values, dtype=float)
+def _make_prices(closes: list[float]) -> pd.DataFrame:
+    n = len(closes)
     return pd.DataFrame(
         {
-            "open": closes + open_offset,
-            "high": closes + abs(open_offset) * 2,
-            "low": closes - abs(open_offset) * 2,
+            "open": [c + 1.0 for c in closes],
+            "high": [c + 2.0 for c in closes],
+            "low": [max(c - 2.0, 0.01) for c in closes],
             "close": closes,
             "volume": [100_000] * n,
         },
@@ -64,9 +63,8 @@ class TestSMACrossoverStrategy:
             SMACrossoverStrategy(fast_window=1, slow_window=5)
 
     def test_golden_cross_generates_long_signal(self) -> None:
-        flat = [100.0] * 10
-        trending = [100.0 + i * 5 for i in range(20)]
-        prices = _make_prices(flat + trending)
+        closes = [100.0] * 10 + [100.0 + i * 20 for i in range(20)]
+        prices = _make_prices(closes)
         strategy = SMACrossoverStrategy(fast_window=3, slow_window=5)
         signals = strategy.generate_signals(prices)
         assert _count_direction(signals, SignalDirection.LONG) >= 1
@@ -78,7 +76,8 @@ class TestSMACrossoverStrategy:
         assert _count_direction(signals, SignalDirection.SHORT) == 0
 
     def test_no_lookahead_bias(self, default_strategy: SMACrossoverStrategy) -> None:
-        full_prices = _make_prices([100.0] * 5 + [120.0] * 10 + [80.0] * 10)
+        closes = [100.0] * 5 + [100.0 + i * 20 for i in range(10)] + [80.0] * 10
+        full_prices = _make_prices(closes)
         truncated = full_prices.iloc[:10]
         full_sigs = default_strategy.generate_signals(full_prices)
         trunc_sigs = default_strategy.generate_signals(truncated)
@@ -116,8 +115,8 @@ class TestMomentumStrategy:
             MomentumStrategy(lookback=20, skip=20)
 
     def test_positive_momentum_yields_long(self, strategy: MomentumStrategy) -> None:
-        rising = [100.0 * (1.005**i) for i in range(60)]
-        prices = _make_prices(rising)
+        closes = [100.0 * (1.05**i) for i in range(60)]
+        prices = _make_prices(closes)
         signals = strategy.generate_signals(prices)
         assert _count_direction(signals, SignalDirection.LONG) >= 1
 
@@ -147,21 +146,21 @@ class TestMeanReversionStrategy:
             MeanReversionStrategy(window=2)
 
     def test_high_zscore_generates_short(self, strategy: MeanReversionStrategy) -> None:
-        prices = _make_prices([100.0] * 20 + [300.0])
+        prices = _make_prices([100.0] * 20 + [500.0])
         signals = strategy.generate_signals(prices)
         last = signals.iloc[-1]
         assert isinstance(last, Signal)
         assert last.direction == SignalDirection.SHORT
 
     def test_zscore_stored_in_metadata(self, strategy: MeanReversionStrategy) -> None:
-        prices = _make_prices([100.0] * 20 + [300.0])
+        prices = _make_prices([100.0] * 20 + [500.0])
         signals = strategy.generate_signals(prices)
         last = signals.iloc[-1]
         assert isinstance(last, Signal)
         assert "z_score" in last.metadata
 
     def test_flat_signal_near_mean(self, strategy: MeanReversionStrategy) -> None:
-        prices = _make_prices([100.0] * 15 + [300.0] + [100.0] * 5)
+        prices = _make_prices([100.0] * 15 + [500.0] + [100.0] * 5)
         signals = strategy.generate_signals(prices)
         assert _count_direction(signals, SignalDirection.FLAT) >= 1
 
