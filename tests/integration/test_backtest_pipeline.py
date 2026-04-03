@@ -12,15 +12,13 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
-
-from quantforge.backtest.engine import Backtester, BacktestMetrics, CostModel, FixedFractionSizer
+from quantforge.backtest.engine import Backtester, BacktestMetrics, CostModel
 from quantforge.core.portfolio import Portfolio
 from quantforge.strategies.base import (
     MeanReversionStrategy,
     MomentumStrategy,
     SMACrossoverStrategy,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -81,9 +79,7 @@ class TestBacktesterSmokeTests:
             (MeanReversionStrategy, {"window": 20, "entry_z": 1.5, "exit_z": 0.3}),
         ],
     )
-    def test_all_built_in_strategies_complete(
-        self, strategy_cls: type, kwargs: dict
-    ) -> None:
+    def test_all_built_in_strategies_complete(self, strategy_cls: type, kwargs: dict) -> None:
         prices = _synthetic_trending(n=300)
         portfolio = Portfolio(initial_capital=100_000.0)
         strategy = strategy_cls(**kwargs)

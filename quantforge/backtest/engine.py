@@ -35,7 +35,6 @@ import structlog
 from quantforge.core.models import (
     Order,
     OrderSide,
-    OrderStatus,
     OrderType,
     Signal,
     SignalDirection,
@@ -65,8 +64,8 @@ class CostModel:
     """
 
     commission_per_share: float = 0.0
-    commission_bps: float = 5.0       # 0.05 % — realistic for retail brokers
-    slippage_bps: float = 5.0         # 0.05 % one-way
+    commission_bps: float = 5.0  # 0.05 % — realistic for retail brokers
+    slippage_bps: float = 5.0  # 0.05 % one-way
     min_commission: float = 1.0
 
     def compute(
@@ -86,8 +85,7 @@ class CostModel:
         notional = float(quantity * price)
         commission = max(
             self.min_commission,
-            float(quantity) * self.commission_per_share
-            + notional * self.commission_bps / 10_000,
+            float(quantity) * self.commission_per_share + notional * self.commission_bps / 10_000,
         )
         slippage = notional * self.slippage_bps / 10_000
         return Decimal(str(round(commission, 6))), Decimal(str(round(slippage, 6)))
@@ -158,7 +156,9 @@ class BacktestResult:
     strategy_name: str
     portfolio: Portfolio
     equity_curve: pd.DataFrame
-    metrics: BacktestMetrics = field(default_factory=lambda: BacktestMetrics())  # Computed post-init
+    metrics: BacktestMetrics = field(
+        default_factory=lambda: BacktestMetrics()
+    )  # Computed post-init
 
     @property
     def total_return(self) -> float:
@@ -193,7 +193,7 @@ class BacktestMetrics:
     avg_win: float = 0.0
     avg_loss: float = 0.0
     total_trades: int = 0
-    var_95: float = 0.0   # 1-day 95 % Value at Risk
+    var_95: float = 0.0  # 1-day 95 % Value at Risk
     cvar_95: float = 0.0  # 1-day 95 % Conditional VaR (Expected Shortfall)
 
 
@@ -263,9 +263,7 @@ class Backtester:
         pending_orders: list[Order] = []
 
         for i, (timestamp, row) in enumerate(prices.iterrows()):
-            bar_date: date = (
-                timestamp.date() if hasattr(timestamp, "date") else timestamp
-            )
+            bar_date: date = timestamp.date() if hasattr(timestamp, "date") else timestamp
             open_price = Decimal(str(row["open"]))
             close_price = Decimal(str(row["close"]))
             mark_prices = {"default": close_price}  # Simplified: single-asset
@@ -431,11 +429,7 @@ class Backtester:
 
         daily_rf = (1 + self.risk_free) ** (1 / 252) - 1
         excess = returns - daily_rf
-        sharpe = (
-            float(excess.mean() / excess.std() * np.sqrt(252))
-            if excess.std() > 0
-            else 0.0
-        )
+        sharpe = float(excess.mean() / excess.std() * np.sqrt(252)) if excess.std() > 0 else 0.0
 
         downside = returns[returns < 0]
         sortino = (

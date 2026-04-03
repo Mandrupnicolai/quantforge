@@ -8,9 +8,9 @@ API so that state mutations are always intentional and auditable.
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+from collections.abc import Iterator
+from datetime import date
 from decimal import Decimal
-from typing import Iterator
 
 import structlog
 
@@ -116,8 +116,7 @@ class Position:
 
     def __repr__(self) -> str:
         return (
-            f"Position({self.instrument.symbol}, qty={self.quantity}, "
-            f"avg_px={self.avg_price:.4f})"
+            f"Position({self.instrument.symbol}, qty={self.quantity}, avg_px={self.avg_price:.4f})"
         )
 
 
@@ -193,8 +192,12 @@ class Portfolio:
             self.cash -= total_cost
             if symbol in self._positions and self._positions[symbol].is_short:
                 return self._close_position(
-                    symbol, fill_quantity, fill_price,
-                    commission, slippage, execution_date,
+                    symbol,
+                    fill_quantity,
+                    fill_price,
+                    commission,
+                    slippage,
+                    execution_date,
                 )
             self._open_or_add(order.instrument, fill_quantity, fill_price)
 
@@ -202,8 +205,12 @@ class Portfolio:
             self.cash += fill_price * fill_quantity - commission - slippage
             if symbol in self._positions and self._positions[symbol].is_long:
                 return self._close_position(
-                    symbol, fill_quantity, fill_price,
-                    commission, slippage, execution_date,
+                    symbol,
+                    fill_quantity,
+                    fill_price,
+                    commission,
+                    slippage,
+                    execution_date,
                 )
             self._open_or_add(order.instrument, -fill_quantity, fill_price)
 

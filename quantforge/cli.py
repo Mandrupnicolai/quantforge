@@ -112,9 +112,7 @@ def backtest(
     }
     strategy = strategy_map[strategy_name.lower()]()
 
-    console.print(
-        f"\nRunning [bold]{strategy.name}[/bold] on {bars} bars of synthetic data…"
-    )
+    console.print(f"\nRunning [bold]{strategy.name}[/bold] on {bars} bars of synthetic data…")
 
     result = Backtester(
         portfolio=Portfolio(initial_capital=capital),

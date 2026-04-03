@@ -14,10 +14,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from rich import box
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich import box
 
 if TYPE_CHECKING:
     from quantforge.backtest.engine import BacktestResult

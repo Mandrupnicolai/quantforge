@@ -10,14 +10,11 @@ Each strategy test verifies:
 
 from __future__ import annotations
 
-from typing import cast
-
 import numpy as np
 import pandas as pd
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
-
 from quantforge.core.models import Signal, SignalDirection
 from quantforge.strategies.base import (
     MeanReversionStrategy,
@@ -25,7 +22,6 @@ from quantforge.strategies.base import (
     SMACrossoverStrategy,
     Strategy,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -65,13 +61,11 @@ def _count_signals(signals: pd.Series) -> dict[SignalDirection | None, int]:
 class TestSMACrossoverStrategy:
     """Tests for the SMA crossover strategy."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def default_strategy(self) -> SMACrossoverStrategy:
         return SMACrossoverStrategy(fast_window=3, slow_window=5)
 
-    def test_satisfies_strategy_protocol(
-        self, default_strategy: SMACrossoverStrategy
-    ) -> None:
+    def test_satisfies_strategy_protocol(self, default_strategy: SMACrossoverStrategy) -> None:
         """Verify duck typing against the Strategy protocol."""
         assert isinstance(default_strategy, Strategy)
 
@@ -106,9 +100,7 @@ class TestSMACrossoverStrategy:
         # There must be at least one LONG signal in the trending period
         assert counts.get(SignalDirection.LONG, 0) >= 1
 
-    def test_no_signals_before_warmup(
-        self, default_strategy: SMACrossoverStrategy
-    ) -> None:
+    def test_no_signals_before_warmup(self, default_strategy: SMACrossoverStrategy) -> None:
         """No signal should fire before the slow MA window is populated."""
         prices = _make_prices([100.0] * 4)  # Fewer bars than slow_window=5
         signals = default_strategy.generate_signals(prices)
@@ -132,9 +124,7 @@ class TestSMACrossoverStrategy:
             trunc_dir = trunc_s.direction if isinstance(trunc_s, Signal) else None
             assert full_dir == trunc_dir, f"Look-ahead bias detected at bar {i}"
 
-    def test_output_length_matches_input(
-        self, default_strategy: SMACrossoverStrategy
-    ) -> None:
+    def test_output_length_matches_input(self, default_strategy: SMACrossoverStrategy) -> None:
         prices = _make_prices([100.0] * 30)
         signals = default_strategy.generate_signals(prices)
         assert len(signals) == 30
@@ -145,9 +135,7 @@ class TestSMACrossoverStrategy:
         slow_offset=st.integers(min_value=1, max_value=10),
     )
     @settings(max_examples=50)
-    def test_output_length_always_matches_input(
-        self, n: int, fast: int, slow_offset: int
-    ) -> None:
+    def test_output_length_always_matches_input(self, n: int, fast: int, slow_offset: int) -> None:
         """Property: output Series must have same length as input DataFrame."""
         slow = fast + slow_offset
         strategy = SMACrossoverStrategy(fast_window=fast, slow_window=slow)
@@ -164,7 +152,7 @@ class TestSMACrossoverStrategy:
 class TestMomentumStrategy:
     """Tests for the momentum strategy."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def strategy(self) -> MomentumStrategy:
         return MomentumStrategy(lookback=30, skip=5, min_strength=0.01)
 
@@ -174,7 +162,7 @@ class TestMomentumStrategy:
 
     def test_positive_momentum_yields_long(self, strategy: MomentumStrategy) -> None:
         """Strongly rising prices should produce a LONG signal."""
-        rising = [100.0 * (1.005 ** i) for i in range(60)]
+        rising = [100.0 * (1.005**i) for i in range(60)]
         prices = _make_prices(rising)
         signals = strategy.generate_signals(prices)
 
@@ -207,7 +195,7 @@ class TestMomentumStrategy:
 class TestMeanReversionStrategy:
     """Tests for the mean-reversion strategy."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def strategy(self) -> MeanReversionStrategy:
         return MeanReversionStrategy(window=10, entry_z=2.0, exit_z=0.5)
 

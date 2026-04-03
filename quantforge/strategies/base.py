@@ -21,7 +21,6 @@ import pandas as pd
 
 from quantforge.core.models import Signal, SignalDirection
 
-
 # ---------------------------------------------------------------------------
 # Protocol definition (structural subtyping)
 # ---------------------------------------------------------------------------

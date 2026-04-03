@@ -13,14 +13,13 @@ Coverage targets:
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from pydantic import ValidationError
-
 from quantforge.core.models import (
     OHLCV,
     AssetClass,
@@ -35,13 +34,12 @@ from quantforge.core.models import (
     Trade,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture()
+@pytest.fixture
 def aapl() -> Instrument:
     """Return a canonical Apple Inc. instrument for use across tests."""
     return Instrument(
@@ -54,11 +52,11 @@ def aapl() -> Instrument:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_ohlcv() -> OHLCV:
     """Return a valid OHLCV bar for AAPL."""
     return OHLCV(
-        timestamp=datetime(2024, 1, 15, tzinfo=timezone.utc),
+        timestamp=datetime(2024, 1, 15, tzinfo=UTC),
         open=Decimal("185.00"),
         high=Decimal("187.50"),
         low=Decimal("184.00"),
@@ -148,9 +146,9 @@ class TestOHLCV:
     def test_high_below_low_raises(self) -> None:
         with pytest.raises(ValidationError, match="high.*must be >= low"):
             OHLCV(
-                timestamp=datetime.now(timezone.utc),
+                timestamp=datetime.now(UTC),
                 open=Decimal("100"),
-                high=Decimal("98"),   # Violates high >= low
+                high=Decimal("98"),  # Violates high >= low
                 low=Decimal("99"),
                 close=Decimal("100"),
                 volume=1000,
@@ -159,7 +157,7 @@ class TestOHLCV:
     def test_close_above_high_raises(self) -> None:
         with pytest.raises(ValidationError):
             OHLCV(
-                timestamp=datetime.now(timezone.utc),
+                timestamp=datetime.now(UTC),
                 open=Decimal("100"),
                 high=Decimal("105"),
                 low=Decimal("98"),
@@ -176,7 +174,7 @@ class TestOHLCV:
             close=Decimal("105"),
             volume=500,
         )
-        assert bar.timestamp.tzinfo == timezone.utc
+        assert bar.timestamp.tzinfo == UTC
 
     def test_zero_volume_is_valid(self, sample_ohlcv: OHLCV) -> None:
         """Auction-only or halted trading days may have zero volume."""
@@ -186,7 +184,7 @@ class TestOHLCV:
     def test_negative_volume_raises(self) -> None:
         with pytest.raises(ValidationError):
             OHLCV(
-                timestamp=datetime.now(timezone.utc),
+                timestamp=datetime.now(UTC),
                 open=Decimal("100"),
                 high=Decimal("105"),
                 low=Decimal("98"),
@@ -207,7 +205,7 @@ class TestOHLCV:
         close = open_  # Use open as close for simplicity
 
         bar = OHLCV(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             open=open_,
             high=high,
             low=low,
@@ -268,7 +266,7 @@ class TestSignal:
 class TestTrade:
     """Tests for Trade PnL accounting."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def long_trade(self, aapl: Instrument) -> Trade:
         """A profitable long trade: bought at 100, sold at 110, 100 shares."""
         return Trade(
@@ -283,7 +281,7 @@ class TestTrade:
             slippage=Decimal("0.50"),
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def losing_short_trade(self, aapl: Instrument) -> Trade:
         """A losing short trade: shorted at 100, bought back at 105, 50 shares."""
         return Trade(

@@ -12,13 +12,12 @@ Design principles:
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import Enum, auto
 from typing import Annotated
 
 from pydantic import BaseModel, Field, field_validator, model_validator
-
 
 # ---------------------------------------------------------------------------
 # Enumerations
@@ -155,7 +154,7 @@ class OHLCV(BaseModel):
         if isinstance(v, str):
             v = datetime.fromisoformat(v)
         if v.tzinfo is None:
-            return v.replace(tzinfo=timezone.utc)
+            return v.replace(tzinfo=UTC)
         return v
 
 
@@ -254,7 +253,7 @@ class Order(BaseModel):
     quantity: Decimal = Field(gt=0)
     limit_price: Decimal | None = Field(default=None, gt=0)
     stop_price: Decimal | None = Field(default=None, gt=0)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     status: OrderStatus = OrderStatus.PENDING
     filled_quantity: Decimal = Decimal("0")
     average_fill_price: Decimal | None = None

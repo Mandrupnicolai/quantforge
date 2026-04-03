@@ -13,9 +13,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-
 from quantforge.core.models import (
-    AssetClass,
     Instrument,
     Order,
     OrderSide,
@@ -23,18 +21,17 @@ from quantforge.core.models import (
 )
 from quantforge.core.portfolio import Portfolio, Position
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture()
+@pytest.fixture
 def msft() -> Instrument:
     return Instrument(symbol="MSFT", exchange="XNAS", currency="USD")
 
 
-@pytest.fixture()
+@pytest.fixture
 def empty_portfolio() -> Portfolio:
     return Portfolio(initial_capital=100_000.0, currency="USD", name="Test")
 
@@ -153,21 +150,23 @@ class TestPortfolio:
         assert len(empty_portfolio.positions) == 0
         assert len(empty_portfolio.trades) == 0
 
-    def test_buy_decreases_cash(
-        self, empty_portfolio: Portfolio, msft: Instrument
-    ) -> None:
+    def test_buy_decreases_cash(self, empty_portfolio: Portfolio, msft: Instrument) -> None:
         self._buy_fill(
-            empty_portfolio, msft,
-            Decimal("100"), Decimal("300.00"), date(2024, 1, 2),
+            empty_portfolio,
+            msft,
+            Decimal("100"),
+            Decimal("300.00"),
+            date(2024, 1, 2),
         )
         assert empty_portfolio.cash == Decimal("70000")  # 100000 - 100*300
 
-    def test_buy_creates_position(
-        self, empty_portfolio: Portfolio, msft: Instrument
-    ) -> None:
+    def test_buy_creates_position(self, empty_portfolio: Portfolio, msft: Instrument) -> None:
         self._buy_fill(
-            empty_portfolio, msft,
-            Decimal("50"), Decimal("200.00"), date(2024, 1, 3),
+            empty_portfolio,
+            msft,
+            Decimal("50"),
+            Decimal("200.00"),
+            date(2024, 1, 3),
         )
         assert "MSFT" in empty_portfolio.positions
         assert empty_portfolio.positions["MSFT"].quantity == Decimal("50")
@@ -176,8 +175,11 @@ class TestPortfolio:
         self, empty_portfolio: Portfolio, msft: Instrument
     ) -> None:
         self._buy_fill(
-            empty_portfolio, msft,
-            Decimal("100"), Decimal("200.00"), date(2024, 1, 2),
+            empty_portfolio,
+            msft,
+            Decimal("100"),
+            Decimal("200.00"),
+            date(2024, 1, 2),
         )
         sell_order = Order(
             order_id="sell-001",
@@ -201,9 +203,7 @@ class TestPortfolio:
         trade = empty_portfolio.trades[0]
         assert trade.pnl == Decimal("2000.00")
 
-    def test_equity_snapshot_with_no_positions(
-        self, empty_portfolio: Portfolio
-    ) -> None:
+    def test_equity_snapshot_with_no_positions(self, empty_portfolio: Portfolio) -> None:
         equity = empty_portfolio.snapshot_equity(date(2024, 1, 2), {})
         assert equity == Decimal("100000")
         assert len(empty_portfolio.equity_curve) == 1
@@ -212,12 +212,13 @@ class TestPortfolio:
         self, empty_portfolio: Portfolio, msft: Instrument
     ) -> None:
         self._buy_fill(
-            empty_portfolio, msft,
-            Decimal("100"), Decimal("200.00"), date(2024, 1, 2),
+            empty_portfolio,
+            msft,
+            Decimal("100"),
+            Decimal("200.00"),
+            date(2024, 1, 2),
         )
-        equity = empty_portfolio.snapshot_equity(
-            date(2024, 1, 3), {"MSFT": Decimal("210.00")}
-        )
+        equity = empty_portfolio.snapshot_equity(date(2024, 1, 3), {"MSFT": Decimal("210.00")})
         # Cash: 100000 - 20000 = 80000; position: 100*210 = 21000; total = 101000
         assert equity == Decimal("101000")
 
@@ -232,12 +233,13 @@ class TestPortfolio:
         )
         assert empty_portfolio.initial_capital == Decimal("100000")
 
-    def test_iter_positions(
-        self, empty_portfolio: Portfolio, msft: Instrument
-    ) -> None:
+    def test_iter_positions(self, empty_portfolio: Portfolio, msft: Instrument) -> None:
         self._buy_fill(
-            empty_portfolio, msft,
-            Decimal("50"), Decimal("100.00"), date(2024, 1, 2),
+            empty_portfolio,
+            msft,
+            Decimal("50"),
+            Decimal("100.00"),
+            date(2024, 1, 2),
         )
         positions = list(empty_portfolio.iter_positions())
         assert len(positions) == 1
