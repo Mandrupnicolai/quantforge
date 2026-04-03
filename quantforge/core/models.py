@@ -7,7 +7,7 @@ and validated via Pydantic v2 so that invalid state is impossible to construct.
 Design principles:
     * Prefer value objects (frozen dataclasses / Pydantic models) over plain dicts.
     * Use ``Decimal`` for monetary values to avoid floating-point drift.
-    * Keep models dependency-free — no I/O, no side effects.
+    * Keep models dependency-free â€” no I/O, no side effects.
 """
 
 from __future__ import annotations
@@ -135,7 +135,7 @@ class OHLCV(BaseModel):
 
     @model_validator(mode="after")
     def _validate_ohlc_consistency(self) -> OHLCV:
-        """Ensure high ≥ open, close ≥ low and high ≥ low."""
+        """Ensure high â‰¥ open, close â‰¥ low and high â‰¥ low."""
         if self.high < self.low:
             msg = f"high ({self.high}) must be >= low ({self.low})"
             raise ValueError(msg)
@@ -198,7 +198,7 @@ class Instrument(BaseModel):
 class Signal(BaseModel):
     """A trading signal produced by a strategy.
 
-    Signals are ephemeral — they do not carry position-sizing logic.  The
+    Signals are ephemeral â€” they do not carry position-sizing logic.  The
     backtester and live execution layer translate signals into orders using
     a configurable position-sizing model.
 
@@ -213,7 +213,7 @@ class Signal(BaseModel):
 
     direction: SignalDirection
     strength: Annotated[float, Field(ge=0.0, le=1.0)] = 1.0
-    metadata: dict[str, float | str | bool] = Field(default_factory=dict)  # type: ignore[assignment]
+    metadata: dict[str, float | str | bool] = Field(default_factory=dict)
 
     @property
     def is_entry(self) -> bool:
@@ -244,7 +244,7 @@ class Order(BaseModel):
         status:      Current lifecycle status.
     """
 
-    model_config = {"frozen": False}  # Mutable — status changes during lifetime
+    model_config = {"frozen": False}  # Mutable â€” status changes during lifetime
 
     order_id: str
     instrument: Instrument
