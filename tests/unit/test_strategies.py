@@ -128,7 +128,7 @@ class TestSMACrossoverStrategy:
     def test_output_length_matches_input(self, default_strategy: SMACrossoverStrategy) -> None:
         prices = _make_prices([100.0] * 30)
         signals = default_strategy.generate_signals(prices)
-        assert len(signals) == 30
+	assert len(signals.index) == 30
 
     @given(
         n=st.integers(min_value=30, max_value=100),
@@ -142,7 +142,7 @@ class TestSMACrossoverStrategy:
         strategy = SMACrossoverStrategy(fast_window=fast, slow_window=slow)
         prices = _make_prices([100.0 + i * 0.1 for i in range(n)])
         signals = strategy.generate_signals(prices)
-        assert len(signals) == n
+        assert len(signals.index) == n
 
 
 # ---------------------------------------------------------------------------

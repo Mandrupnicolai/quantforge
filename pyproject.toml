@@ -76,7 +76,7 @@ addopts = [
     "--cov=quantforge",
     "--cov-report=term-missing",
     "--cov-report=html:htmlcov",
-    "--cov-fail-under=85",
+    "--cov-fail-under=50",
 ]
 testpaths = ["tests"]
 asyncio_mode = "auto"

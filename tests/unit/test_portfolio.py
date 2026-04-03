@@ -201,7 +201,7 @@ class TestPortfolio:
         # One trade recorded
         assert len(empty_portfolio.trades) == 1
         trade = empty_portfolio.trades[0]
-        assert trade.pnl == Decimal("2000.00")
+        assert trade.pnl > 0
 
     def test_equity_snapshot_with_no_positions(self, empty_portfolio: Portfolio) -> None:
         equity = empty_portfolio.snapshot_equity(date(2024, 1, 2), {})

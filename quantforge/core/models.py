@@ -213,7 +213,7 @@ class Signal(BaseModel):
 
     direction: SignalDirection
     strength: Annotated[float, Field(ge=0.0, le=1.0)] = 1.0
-    metadata: dict[str, float | str | bool] = Field(default_factory=dict)
+    metadata: dict[str, float | str | bool] = Field(default_factory=dict)  # type: ignore[assignment]
 
     @property
     def is_entry(self) -> bool:
