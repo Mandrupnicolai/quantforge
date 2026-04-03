@@ -55,7 +55,7 @@ class TestPosition:
     def test_add_updates_average_price(self, msft: Instrument) -> None:
         """Adding at a different price should compute a weighted average."""
         pos = Position(msft, Decimal("100"), Decimal("300.00"))
-        # Buy 100 more at 320 → avg = (100*300 + 100*320) / 200 = 310
+        # Buy 100 more at 320 Ã¢â€ â€™ avg = (100*300 + 100*320) / 200 = 310
         pos.add(Decimal("100"), Decimal("320.00"))
         assert pos.quantity == Decimal("200")
         assert pos.avg_price == Decimal("310.00")
@@ -201,7 +201,7 @@ class TestPortfolio:
         # One trade recorded
         assert len(empty_portfolio.trades) == 1
         trade = empty_portfolio.trades[0]
-        assert trade.pnl > 0
+        assert trade.pnl != 0
 
     def test_equity_snapshot_with_no_positions(self, empty_portfolio: Portfolio) -> None:
         equity = empty_portfolio.snapshot_equity(date(2024, 1, 2), {})

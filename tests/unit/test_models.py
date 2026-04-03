@@ -17,7 +17,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
-from hypothesis import given, settings
+from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 from pydantic import ValidationError
 from quantforge.core.models import (
@@ -161,7 +161,9 @@ class TestOHLCV:
                 open=Decimal("100"),
                 high=Decimal("105"),
                 low=Decimal("98"),
-                close=Decimal("110"),  # Close > high — impossible
+                close=Decimal(
+                    "110"
+                ),  # Close > high ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â impossible
                 volume=1000,
             )
 
@@ -194,7 +196,9 @@ class TestOHLCV:
 
     @given(
         open_=st.decimals(min_value="0.01", max_value="10000", places=2, allow_nan=False),
-        pct=st.floats(min_value=0.0, max_value=0.5),  # High/low within ±50% of open
+        pct=st.floats(
+            min_value=0.0, max_value=0.5
+        ),  # High/low within ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â±50% of open
     )
     @settings(max_examples=200)
     def test_high_always_gte_low(self, open_: Decimal, pct: float) -> None:
@@ -333,6 +337,7 @@ class TestTrade:
         assert t.pnl == Decimal("0")
         assert t.is_winner is False
 
+    @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
     @given(
         entry=st.decimals(min_value="1", max_value="5000", places=2, allow_nan=False),
         exit_=st.decimals(min_value="1", max_value="5000", places=2, allow_nan=False),
@@ -343,7 +348,6 @@ class TestTrade:
         entry: Decimal,
         exit_: Decimal,
         qty: Decimal,
-        aapl: Instrument,
     ) -> None:
         """Property: is_winner iff pnl > 0 (with zero costs)."""
         t = Trade(
