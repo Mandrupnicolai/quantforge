@@ -1,4 +1,4 @@
-﻿from quantforge.backtest.engine import Backtester, BacktestMetrics, BacktestResult, CostModel
+from quantforge.backtest.engine import Backtester, BacktestMetrics, BacktestResult, CostModel
 from quantforge.core.portfolio import Portfolio
 
 __all__ = ["Backtester", "BacktestMetrics", "BacktestResult", "CostModel", "Portfolio"]

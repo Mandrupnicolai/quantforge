@@ -1,4 +1,4 @@
-﻿from quantforge.strategies.base import (
+from quantforge.strategies.base import (
     MeanReversionStrategy,
     MomentumStrategy,
     SMACrossoverStrategy,
