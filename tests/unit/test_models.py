@@ -196,7 +196,7 @@ class TestOHLCV:
         open_=st.decimals(min_value="0.01", max_value="10000", places=2, allow_nan=False),
         pct=st.floats(
             min_value=0.0, max_value=0.5
-        ),  # High/low within ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â±50% of open
+        pct=st.floats(min_value=0.0, max_value=0.5),
     )
     @settings(max_examples=200)
     def test_high_always_gte_low(self, open_: Decimal, pct: float) -> None:
