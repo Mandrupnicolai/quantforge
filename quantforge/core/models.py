@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from enum import Enum, auto
+from enum import Enum, StrEnum, auto
 from typing import Annotated
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -24,7 +24,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 # ---------------------------------------------------------------------------
 
 
-class AssetClass(str, Enum):
+class AssetClass(StrEnum):
     """Supported asset classes."""
 
     EQUITY = "equity"
@@ -35,14 +35,14 @@ class AssetClass(str, Enum):
     DERIVATIVE = "derivative"
 
 
-class OrderSide(str, Enum):
+class OrderSide(StrEnum):
     """Direction of an order."""
 
     BUY = "buy"
     SELL = "sell"
 
 
-class OrderType(str, Enum):
+class OrderType(StrEnum):
     """Execution instruction for an order."""
 
     MARKET = "market"
@@ -51,7 +51,7 @@ class OrderType(str, Enum):
     STOP_LIMIT = "stop_limit"
 
 
-class OrderStatus(str, Enum):
+class OrderStatus(StrEnum):
     """Lifecycle state of an order."""
 
     PENDING = "pending"

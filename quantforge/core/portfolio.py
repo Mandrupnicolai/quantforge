@@ -8,13 +8,16 @@ API so that state mutations are always intentional and auditable.
 from __future__ import annotations
 
 import uuid
-from collections.abc import Iterator
-from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 import structlog
 
 from quantforge.core.models import Instrument, Order, OrderSide, OrderStatus, Trade
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+    from datetime import date
 
 log = structlog.get_logger(__name__)
 

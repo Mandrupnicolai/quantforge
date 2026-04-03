@@ -24,7 +24,6 @@ from __future__ import annotations
 import copy
 import uuid
 from dataclasses import dataclass, field
-from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -39,9 +38,11 @@ from quantforge.core.models import (
     Signal,
     SignalDirection,
 )
-from quantforge.core.portfolio import Portfolio
 
 if TYPE_CHECKING:
+    from datetime import date
+
+    from quantforge.core.portfolio import Portfolio
     from quantforge.strategies.base import Strategy
 
 log = structlog.get_logger(__name__)
@@ -266,7 +267,6 @@ class Backtester:
             bar_date: date = timestamp.date() if hasattr(timestamp, "date") else timestamp
             open_price = Decimal(str(row["open"]))
             close_price = Decimal(str(row["close"]))
-            mark_prices = {"default": close_price}  # Simplified: single-asset
 
             # --- Execute any pending orders at today's open ---
             for order in list(pending_orders):
@@ -288,10 +288,7 @@ class Backtester:
 
             # --- Snapshot equity at close ---
             symbol = "default"
-            if symbol in portfolio.positions:
-                mark = {symbol: close_price}
-            else:
-                mark = {}
+            mark = {symbol: close_price} if symbol in portfolio.positions else {}
             portfolio.snapshot_equity(bar_date, mark)  # type: ignore[arg-type]
 
         equity_df = self._build_equity_df(portfolio, prices)

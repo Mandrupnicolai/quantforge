@@ -72,7 +72,7 @@ class TestBacktesterSmokeTests:
     """Smoke tests: verify the pipeline completes without error."""
 
     @pytest.mark.parametrize(
-        "strategy_cls, kwargs",
+        ("strategy_cls", "kwargs"),
         [
             (SMACrossoverStrategy, {"fast_window": 20, "slow_window": 50}),
             (MomentumStrategy, {"lookback": 60, "skip": 10, "min_strength": 0.01}),

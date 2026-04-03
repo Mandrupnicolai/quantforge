@@ -71,7 +71,8 @@ class TestSMACrossoverStrategy:
 
     def test_name_includes_windows(self) -> None:
         s = SMACrossoverStrategy(fast_window=10, slow_window=30)
-        assert "10" in s.name and "30" in s.name
+        assert "10" in s.name
+        assert "30" in s.name
 
     def test_fast_gte_slow_raises(self) -> None:
         with pytest.raises(ValueError, match="strictly less than"):
@@ -184,7 +185,8 @@ class TestMomentumStrategy:
                 assert 0.0 <= s.strength <= 1.0
 
     def test_name_includes_parameters(self, strategy: MomentumStrategy) -> None:
-        assert "30" in strategy.name and "5" in strategy.name
+        assert "30" in strategy.name
+        assert "5" in strategy.name
 
 
 # ---------------------------------------------------------------------------
