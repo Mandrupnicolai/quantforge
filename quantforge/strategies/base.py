@@ -1,14 +1,4 @@
-"""Strategy abstractions and built-in implementations.
-
-A ``Strategy`` in QuantForge is any object that implements the ``Strategy``
-protocol — duck typing means no inheritance is required.  This keeps the API
-open for extension without modification (OCP).
-
-Built-in strategies:
-    * ``SMACrossoverStrategy`` — classic fast/slow simple moving average crossover.
-    * ``MomentumStrategy``     — cross-sectional 12-1 month momentum.
-    * ``MeanReversionStrategy``— z-score-based mean-reversion on rolling windows.
-"""
+"""Strategy abstractions and built-in implementations."""
 
 from __future__ import annotations
 
@@ -21,47 +11,21 @@ import pandas as pd
 
 from quantforge.core.models import Signal, SignalDirection
 
-# ---------------------------------------------------------------------------
-# Protocol definition (structural subtyping)
-# ---------------------------------------------------------------------------
-
 
 @runtime_checkable
 class Strategy(Protocol):
-    """The interface every QuantForge strategy must satisfy.
-
-    Any class that implements ``generate_signals`` with this signature is
-    automatically a valid ``Strategy`` — no base class required.
-
-    The method must be *pure*: it must not mutate state or perform I/O.
-    Strategies that require historical context should cache it in ``__init__``.
-    """
+    """The interface every QuantForge strategy must satisfy."""
 
     @abstractmethod
     def generate_signals(self, prices: pd.DataFrame) -> pd.Series:
-        """Generate a signal for each timestamp in ``prices``.
-
-        Args:
-            prices: A DataFrame with a DatetimeIndex and at minimum a ``"close"``
-                    column.  Additional columns (``"open"``, ``"high"``, ``"low"``,
-                    ``"volume"``) may be used by strategies that need them.
-
-        Returns:
-            A ``pd.Series`` of ``Signal`` objects with the same index as ``prices``.
-            Entries without a signal should be ``None``.
-        """
+        """Generate a signal for each timestamp in prices."""
         ...
 
     @property
     @abstractmethod
     def name(self) -> str:
-        """A short, human-readable identifier used in reports and logs."""
+        """A short human-readable identifier used in reports and logs."""
         ...
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 
 def _to_signal_series(
@@ -69,48 +33,31 @@ def _to_signal_series(
     mask_short: pd.Series,
     mask_flat: pd.Series | None = None,
 ) -> pd.Series:
-    """Convert boolean masks into a Series of Signal objects.
-
-    Args:
-        mask_long:  Boolean Series; True where a LONG signal should fire.
-        mask_short: Boolean Series; True where a SHORT signal should fire.
-        mask_flat:  Boolean Series; True where a FLAT (exit) signal should fire.
-
-    Returns:
-        Series of ``Signal | None`` aligned to the input index.
-    """
-    result = pd.Series(index=mask_long.index, dtype=object)
-
-    result[mask_long] = Signal(direction=SignalDirection.LONG)
-    result[mask_short] = Signal(direction=SignalDirection.SHORT)
+    """Convert boolean masks into a Series of Signal objects."""
+    result = pd.Series([None] * len(mask_long), index=mask_long.index, dtype=object)
+    for i, (_, val) in enumerate(mask_long.items()):
+        if val:
+            result.iloc[i] = Signal(direction=SignalDirection.LONG)
+    for i, (_, val) in enumerate(mask_short.items()):
+        if val:
+            result.iloc[i] = Signal(direction=SignalDirection.SHORT)
     if mask_flat is not None:
-        result[mask_flat] = Signal(direction=SignalDirection.FLAT)
-
+        for i, (_, val) in enumerate(mask_flat.items()):
+            if val:
+                result.iloc[i] = Signal(direction=SignalDirection.FLAT)
     return result
-
-
-# ---------------------------------------------------------------------------
-# Built-in strategies
-# ---------------------------------------------------------------------------
 
 
 @dataclass
 class SMACrossoverStrategy:
     """Simple moving average crossover strategy.
 
-    Generates a LONG signal when the fast SMA crosses *above* the slow SMA,
-    a SHORT signal on a cross *below*, and no signal otherwise.
-
-    This is the archetypal trend-following strategy — straightforward to
-    implement, test, and explain, while still capturing real market dynamics.
+    Generates a LONG signal when the fast SMA crosses above the slow SMA,
+    a SHORT signal on a cross below, and no signal otherwise.
 
     Args:
-        fast_window: Lookback period for the faster (more reactive) SMA.
-        slow_window: Lookback period for the slower (trend-confirming) SMA.
-
-    Example:
-        >>> strategy = SMACrossoverStrategy(fast_window=20, slow_window=50)
-        >>> signals = strategy.generate_signals(price_df)
+        fast_window: Lookback period for the faster SMA.
+        slow_window: Lookback period for the slower SMA.
     """
 
     fast_window: int = 20
@@ -135,52 +82,37 @@ class SMACrossoverStrategy:
     def generate_signals(self, prices: pd.DataFrame) -> pd.Series:
         """Compute SMA crossover signals for each bar.
 
-        Uses a shift(1) to avoid look-ahead bias: the signal for bar *t* is
-        derived from data available at the *close* of bar *t-1*.
-
         Args:
-            prices: OHLCV DataFrame with at minimum a ``"close"`` column.
+            prices: OHLCV DataFrame with at minimum a close column.
 
         Returns:
-            Series of ``Signal | None`` indexed identically to ``prices``.
+            Series of Signal or None indexed identically to prices.
         """
         close = prices["close"].astype(float)
 
         fast_ma = close.rolling(window=self.fast_window, min_periods=self.fast_window).mean()
         slow_ma = close.rolling(window=self.slow_window, min_periods=self.slow_window).mean()
 
-        # Golden cross / death cross detected on the *previous* bar
         prev_fast = fast_ma.shift(1)
         prev_slow = slow_ma.shift(1)
 
         golden_cross = (fast_ma > slow_ma) & (prev_fast <= prev_slow)
         death_cross = (fast_ma < slow_ma) & (prev_fast >= prev_slow)
 
-        return _to_signal_series(
-            mask_long=golden_cross,
-            mask_short=death_cross,
-        )
+        return _to_signal_series(mask_long=golden_cross, mask_short=death_cross)
 
 
 @dataclass
 class MomentumStrategy:
     """Cross-sectional price momentum strategy.
 
-    Measures the return over a ``lookback`` period, skipping the most recent
-    ``skip`` bars to avoid the well-documented short-term reversal effect.
-
-    A positive momentum score generates a LONG signal; a negative score a
-    SHORT signal.  Scores below ``min_strength`` are treated as noise and
-    suppressed.
+    Measures the return over a lookback period, skipping the most recent
+    skip bars to avoid the short-term reversal effect.
 
     Args:
-        lookback:     Total lookback window in bars (default 252 ≈ 1 year daily).
-        skip:         Bars to skip at the end of the window (default 21 ≈ 1 month).
+        lookback:     Total lookback window in bars (default 252).
+        skip:         Bars to skip at the end of the window (default 21).
         min_strength: Minimum absolute return to emit a signal (default 0.02).
-
-    References:
-        Jegadeesh & Titman (1993). "Returns to Buying Winners and Selling Losers".
-        Journal of Finance 48(1): 65-91.
     """
 
     lookback: int = 252
@@ -196,56 +128,50 @@ class MomentumStrategy:
 
     @property
     def name(self) -> str:
+        """Return strategy name with parameters."""
         return f"Momentum({self.lookback}-{self.skip})"
 
     def generate_signals(self, prices: pd.DataFrame) -> pd.Series:
         """Generate momentum signals.
 
         Args:
-            prices: OHLCV DataFrame with a ``"close"`` column.
+            prices: OHLCV DataFrame with a close column.
 
         Returns:
-            Series of ``Signal | None`` carrying directional bias and a
-            strength score normalised to [0, 1].
+            Series of Signal or None with strength scores normalised to 0-1.
         """
         close = prices["close"].astype(float)
-        returns = close.pct_change(self._effective_window).shift(self.skip)
+        returns = close.pct_change(self._effective_window, fill_method=None).shift(self.skip)
 
-        # Clip to [-1, 1] before normalising to avoid distortion from extreme events
         clipped = returns.clip(-1.0, 1.0)
         strength = (clipped.abs() - self.min_strength).clip(lower=0.0)
-        # Normalise: max possible strength after clipping is (1 - min_strength)
         max_s = 1.0 - self.min_strength
         normalised = (strength / max_s).clip(0.0, 1.0)
 
-        def _to_signal(row: tuple[float, float]) -> Signal | None:
-            ret, s = row
-            if abs(ret) < self.min_strength or np.isnan(ret):
+        def _to_signal(ret: float, s: float) -> Signal | None:
+            if np.isnan(ret) or abs(ret) < self.min_strength:
                 return None
             direction = SignalDirection.LONG if ret > 0 else SignalDirection.SHORT
             return Signal(direction=direction, strength=float(s))
 
         combined = pd.DataFrame({"ret": returns, "strength": normalised})
-        return combined.apply(lambda r: _to_signal((r["ret"], r["strength"])), axis=1)
+        result = pd.Series([None] * len(combined), index=combined.index, dtype=object)
+        for i, (_, row) in enumerate(combined.iterrows()):
+            result.iloc[i] = _to_signal(row["ret"], row["strength"])
+        return result
 
 
 @dataclass
 class MeanReversionStrategy:
     """Z-score based mean-reversion strategy.
 
-    Computes a rolling z-score of price relative to its rolling mean and
-    standard deviation.  Positions are entered when the z-score exceeds
-    ``entry_z`` and exited when it reverts to within ``exit_z`` of the mean.
+    Enters positions when the z-score exceeds entry_z and exits when
+    it reverts to within exit_z of the mean.
 
     Args:
-        window:   Rolling window for mean and std calculation (default 20 bars).
-        entry_z:  Z-score threshold to enter a trade (default ±2.0).
-        exit_z:   Z-score threshold to exit a trade (default ±0.5).
-
-    Signals:
-        * z > +entry_z → SHORT (overextended to the upside)
-        * z < -entry_z → LONG (overextended to the downside)
-        * |z| < exit_z  → FLAT (mean has been restored)
+        window:   Rolling window for mean and std (default 20 bars).
+        entry_z:  Z-score threshold to enter a trade (default 2.0).
+        exit_z:   Z-score threshold to exit a trade (default 0.5).
     """
 
     window: int = 20
@@ -262,29 +188,27 @@ class MeanReversionStrategy:
 
     @property
     def name(self) -> str:
+        """Return strategy name with parameters."""
         return f"MeanReversion(w={self.window},ez={self.entry_z})"
 
     def generate_signals(self, prices: pd.DataFrame) -> pd.Series:
         """Generate mean-reversion signals based on rolling z-scores.
 
         Args:
-            prices: OHLCV DataFrame with a ``"close"`` column.
+            prices: OHLCV DataFrame with a close column.
 
         Returns:
-            Series of ``Signal | None`` with the z-score stored in
-            ``signal.metadata["z_score"]`` for diagnostic use.
+            Series of Signal or None with z_score in signal metadata.
         """
         close = prices["close"].astype(float)
         rolling_mean = close.rolling(window=self.window).mean()
         rolling_std = close.rolling(window=self.window).std()
-
-        # Avoid division by zero during flat markets
         z_score = (close - rolling_mean) / rolling_std.replace(0.0, np.nan)
 
         def _signal_for(z: float) -> Signal | None:
             if np.isnan(z):
                 return None
-            meta = {"z_score": round(z, 4)}
+            meta: dict[str, float | str | bool] = {"z_score": round(z, 4)}
             if z > self.entry_z:
                 return Signal(
                     direction=SignalDirection.SHORT,
@@ -301,4 +225,7 @@ class MeanReversionStrategy:
                 return Signal(direction=SignalDirection.FLAT, metadata=meta)
             return None
 
-        return z_score.map(_signal_for)
+        result = pd.Series([None] * len(z_score), index=z_score.index, dtype=object)
+        for i, val in enumerate(z_score):
+            result.iloc[i] = _signal_for(float(val))
+        return result
