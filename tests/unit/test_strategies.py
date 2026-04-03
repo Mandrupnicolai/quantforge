@@ -49,7 +49,7 @@ class TestSMACrossoverStrategy:
     def test_name_includes_windows(self) -> None:
         s = SMACrossoverStrategy(fast_window=10, slow_window=30)
         assert "10" in s.name
-	assert "30" in s.name
+        assert "30" in s.name
 
     def test_fast_gte_slow_raises(self) -> None:
         with pytest.raises(ValueError, match="strictly less than"):
@@ -122,8 +122,7 @@ class TestMomentumStrategy:
         assert _count_direction(signals, SignalDirection.LONG) >= 1
 
     def test_strength_in_valid_range(self, strategy: MomentumStrategy) -> None:
-        rng = [100.0 + float(i) * 0.1 for i in range(60)]
-        prices = _make_prices(rng)
+        prices = _make_prices([100.0 + float(i) * 0.1 for i in range(60)])
         signals = strategy.generate_signals(prices)
         for s in signals:
             if isinstance(s, Signal):
@@ -131,7 +130,7 @@ class TestMomentumStrategy:
 
     def test_name_includes_parameters(self, strategy: MomentumStrategy) -> None:
         assert "30" in strategy.name
-	assert "5" in strategy.name
+        assert "5" in strategy.name
 
 
 class TestMeanReversionStrategy:
