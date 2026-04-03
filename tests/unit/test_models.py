@@ -197,8 +197,6 @@ class TestOHLCV:
         pct=st.floats(min_value=0.0, max_value=0.5),
     )
     @settings(max_examples=200)
-    )
-    @settings(max_examples=200)
     def test_high_always_gte_low(self, open_: Decimal, pct: float) -> None:
         """Property: for any valid bar, high must always be >= low."""
         spread = open_ * Decimal(str(pct))
