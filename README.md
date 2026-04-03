@@ -1,7 +1,7 @@
 # QuantForge
 
-[![CI](https://github.com/yourusername/quantforge/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/quantforge/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/yourusername/quantforge/branch/main/graph/badge.svg)](https://codecov.io/gh/yourusername/quantforge)
+[![CI](https://github.com/Mandrupnicolai/quantforge/actions/workflows/ci.yml/badge.svg)](https://github.com/Mandrupnicolai/quantforge/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Mandrupnicolai/quantforge/branch/main/graph/badge.svg)](https://codecov.io/gh/Mandrupnicolai/quantforge)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
