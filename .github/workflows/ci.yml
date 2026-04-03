@@ -20,7 +20,7 @@ env:
 
 jobs:
   # ---------------------------------------------------------------------------
-  # Lint & Type-check (fast — runs first to catch trivial failures cheaply)
+  # Lint & Type-check (fast â€” runs first to catch trivial failures cheaply)
   # ---------------------------------------------------------------------------
   quality:
     name: Code Quality (${{ matrix.python-version }})
@@ -145,8 +145,7 @@ jobs:
 
       - name: Run benchmarks
         run: |
-          pytest tests/ --benchmark-only --benchmark-json=benchmark-results.json \
-            --benchmark-min-rounds=5 -q
+          pytest tests/ --benchmark-only --benchmark-json=benchmark-results.json --benchmark-min-rounds=5 -q --no-cov
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v4
